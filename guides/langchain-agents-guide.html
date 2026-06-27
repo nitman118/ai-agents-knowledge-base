@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Building AI Agents with LangChain — A Living Guide</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#161922; --panel2:#1d212c; --ink:#e6e9ef; --muted:#9aa3b2;
+    --line:#2a2f3a; --accent:#5b8cff; --accent2:#2fd6a5; --warn:#f0b24b; --pink:#ff7aa2;
+    --code:#11141b; --chip:#222838;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code,pre{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace}
+  .wrap{display:grid;grid-template-columns:270px 1fr;max-width:1280px;margin:0 auto;min-height:100vh}
+
+  /* Sidebar */
+  aside{
+    position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;
+    background:var(--panel);border-right:1px solid var(--line);padding:22px 16px;
+  }
+  aside h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:18px 8px 8px}
+  aside a{display:block;color:var(--ink);padding:7px 10px;border-radius:8px;font-size:14.5px}
+  aside a:hover{background:var(--panel2);text-decoration:none}
+  .brand{font-weight:700;font-size:16px;padding:4px 8px 10px;border-bottom:1px solid var(--line);margin-bottom:6px}
+  .brand span{color:var(--accent)}
+
+  /* Main */
+  main{padding:40px 48px 100px;max-width:920px}
+  header.top{margin-bottom:8px}
+  h1{font-size:30px;line-height:1.25;margin:0 0 8px}
+  .sub{color:var(--muted);font-size:16px;margin:0 0 18px}
+  .meta{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:30px}
+  .pill{background:var(--chip);border:1px solid var(--line);color:var(--muted);
+    padding:4px 11px;border-radius:999px;font-size:12.5px}
+  .pill b{color:var(--ink);font-weight:600}
+
+  section{margin:0 0 42px;scroll-margin-top:20px}
+  h2.sec{font-size:23px;margin:34px 0 6px;padding-top:10px;border-top:1px solid var(--line)}
+  h3{font-size:17.5px;margin:24px 0 6px;color:#fff}
+  p{margin:10px 0}
+  .lead{color:var(--muted)}
+  ul,ol{margin:10px 0;padding-left:22px}
+  li{margin:5px 0}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;margin:16px 0}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:820px){.grid2{grid-template-columns:1fr}}
+
+  .note{border-left:3px solid var(--accent);background:var(--panel2);padding:12px 16px;border-radius:8px;margin:14px 0}
+  .note.tip{border-color:var(--accent2)}
+  .note.warn{border-color:var(--warn)}
+  .note b{color:#fff}
+
+  pre{background:var(--code);border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow-x:auto;font-size:13.5px;line-height:1.55}
+  pre code{color:#cdd6e4}
+  .k{color:#c792ea}.s{color:#ecc48d}.c{color:#637777;font-style:italic}.f{color:#82aaff}.n{color:#f78c6c}
+  p code,li code,td code{background:var(--chip);padding:1px 6px;border-radius:5px;font-size:13px;color:#ffd9a8}
+
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14.5px}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.04em}
+
+  /* status badges */
+  .badge{display:inline-block;font-size:11.5px;font-weight:600;padding:2px 9px;border-radius:999px;white-space:nowrap}
+  .b-done{background:rgba(47,214,165,.15);color:var(--accent2)}
+  .b-soon{background:rgba(240,178,75,.15);color:var(--warn)}
+  .b-idea{background:rgba(255,122,162,.15);color:var(--pink)}
+
+  .map{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}
+  @media(max-width:820px){.map{grid-template-columns:1fr 1fr}}
+  .map .box{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .map .box h4{margin:0 0 4px;font-size:15px;color:#fff}
+  .map .box p{margin:0;font-size:13px;color:var(--muted)}
+
+  details{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin:12px 0;padding:0 16px}
+  summary{cursor:pointer;padding:14px 0;font-weight:600;font-size:15.5px}
+  details[open]{padding-bottom:8px}
+
+  footer{color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:20px;margin-top:30px}
+  .src{font-size:13.5px}
+  .src li{margin:3px 0}
+  hr{border:none;border-top:1px solid var(--line);margin:28px 0}
+  .toc-mini a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<aside>
+  <div class="brand">🤖 LangChain <span>Agent Guide</span></div>
+  <h2>Start here</h2>
+  <a href="#what">What is an agent</a>
+  <a href="#map">The 4 tools</a>
+  <a href="#build">Build your first agent</a>
+  <h2>Core parts</h2>
+  <a href="#models">Models</a>
+  <a href="#tools">Tools</a>
+  <a href="#memory">Memory</a>
+  <a href="#middleware">Middleware</a>
+  <a href="#observability">Observability</a>
+  <h2>Going further</h2>
+  <a href="#harness">Harnesses & Deep Agents</a>
+  <a href="#multi">Multi-agent</a>
+  <a href="#hitl">Human-in-the-loop</a>
+  <a href="#rag">RAG / retrieval</a>
+  <a href="#deploy">Deployment</a>
+  <h2>Reference</h2>
+  <a href="#topics">Master topic list</a>
+  <a href="#appendix">Code appendix</a>
+  <a href="#sources">Sources</a>
+</aside>
+
+<main>
+<header class="top">
+  <h1>Building AI Agents with LangChain</h1>
+  <p class="sub">A living guide to LangChain, LangGraph, Deep Agents, and LangSmith. Written in plain English.</p>
+  <div class="meta">
+    <span class="pill">Version <b>v1.0</b></span>
+    <span class="pill">Updated <b>27 Jun 2026</b></span>
+    <span class="pill">Stack <b>LangChain 1.x · LangGraph 1.x</b></span>
+    <span class="pill">Language <b>Python</b></span>
+  </div>
+  <div class="note tip">
+    <b>How to use this doc.</b> The main text explains ideas with light code. Full, copy-paste code lives in the <a href="#appendix">Appendix</a>. This is a living file — we add to the <a href="#topics">Master topic list</a> as we find better methods.
+  </div>
+</header>
+
+<!-- WHAT -->
+<section id="what">
+  <h2 class="sec">1. What is an AI agent?</h2>
+  <p>A plain chatbot answers once and stops. An <b>agent</b> works in a loop. It thinks, picks a tool, runs it, looks at the result, then decides the next step. It repeats until the job is done.</p>
+  <p>The loop has four moving parts:</p>
+  <ul>
+    <li><b>A model</b> — the brain that decides what to do (Claude, GPT, etc).</li>
+    <li><b>Tools</b> — actions it can take (search, run code, call an API).</li>
+    <li><b>Memory</b> — what it remembers within a chat and across chats.</li>
+    <li><b>A harness</b> — the scaffolding around the model that keeps it on track.</li>
+  </ul>
+  <p class="lead">LangChain gives you all four. The rest of this guide covers each part, then shows how to ship and watch your agent in production.</p>
+</section>
+
+<!-- MAP -->
+<section id="map">
+  <h2 class="sec">2. The four tools in the LangChain family</h2>
+  <p>People say "LangChain" but really mean four things. Here is who does what.</p>
+  <div class="map">
+    <div class="box"><h4>LangChain</h4><p>The high-level kit. One line builds an agent. Same code works with any model.</p></div>
+    <div class="box"><h4>LangGraph</h4><p>The low-level engine under LangChain. Runs the loop, saves state, handles long jobs.</p></div>
+    <div class="box"><h4>Deep Agents</h4><p>A ready-made harness for big, multi-step tasks. Planning and sub-agents built in.</p></div>
+    <div class="box"><h4>LangSmith</h4><p>The eyes. Traces every step, runs tests, tracks cost. Works with any framework.</p></div>
+  </div>
+  <p>Rule of thumb: start with <b>LangChain</b>. Drop into <b>LangGraph</b> when you need custom control. Reach for <b>Deep Agents</b> for long autonomous jobs. Add <b>LangSmith</b> from day one to see what is happening.</p>
+  <div class="note">
+    <b>Big news (late 2025).</b> LangChain and LangGraph both hit <b>1.0</b>. The new way to build an agent is <code>create_agent()</code>. It replaces the old <code>AgentExecutor</code> and <code>create_react_agent</code>. Old chains and helpers moved to a separate package called <code>langchain-classic</code>. 1.0 promises no breaking changes until 2.0.
+  </div>
+</section>
+
+<!-- BUILD -->
+<section id="build">
+  <h2 class="sec">3. Build your first agent</h2>
+  <p>One function does it: <code>create_agent</code>. You give it a model, some tools, and a system prompt. You get back an agent you can call.</p>
+  <pre><code><span class="k">from</span> langchain.agents <span class="k">import</span> create_agent
+
+agent = <span class="f">create_agent</span>(
+    model=<span class="s">"claude-sonnet-4-6"</span>,
+    tools=[search_web, send_email],
+    system_prompt=<span class="s">"You are a helpful research assistant."</span>,
+)
+
+result = agent.<span class="f">invoke</span>({<span class="s">"messages"</span>: [{<span class="s">"role"</span>:<span class="s">"user"</span>,<span class="s">"content"</span>:<span class="s">"Research AI safety trends"</span>}]})</code></pre>
+  <p>That is a full agent. It loops: call the model, run any tool the model asks for, feed the result back, repeat until the model gives a final answer. The full runnable version is in the <a href="#appendix">Appendix</a>.</p>
+  <p>The standard message shape is a list under <code>"messages"</code>. Each message has a <code>role</code> (<code>user</code>, <code>assistant</code>, <code>system</code>, <code>tool</code>) and <code>content</code>.</p>
+</section>
+
+<!-- MODELS -->
+<section id="models">
+  <h2 class="sec">4. Models — Claude, OpenAI, Groq, Ollama</h2>
+  <p>An agent needs a brain. LangChain lets you swap brains without rewriting your app. One helper, <code>init_chat_model</code>, loads any provider.</p>
+  <pre><code><span class="k">from</span> langchain.chat_models <span class="k">import</span> init_chat_model
+
+model = <span class="f">init_chat_model</span>(<span class="s">"claude-sonnet-4-6"</span>, model_provider=<span class="s">"anthropic"</span>)
+<span class="c"># swap one string to change brains — the rest of your code stays the same</span></code></pre>
+  <p>Each provider needs its own small package installed.</p>
+  <table>
+    <thead><tr><th>Provider</th><th>Good for</th><th>Install</th><th>provider name</th></tr></thead>
+    <tbody>
+      <tr><td><b>Anthropic (Claude)</b></td><td>Strong reasoning, long context, agents</td><td><code>langchain-anthropic</code></td><td><code>anthropic</code></td></tr>
+      <tr><td><b>OpenAI</b></td><td>General use, wide tool support</td><td><code>langchain-openai</code></td><td><code>openai</code></td></tr>
+      <tr><td><b>Groq</b></td><td>Very fast, cheap, open models</td><td><code>langchain-groq</code></td><td><code>groq</code></td></tr>
+      <tr><td><b>Ollama</b></td><td>Runs local, private, free, offline</td><td><code>langchain-ollama</code></td><td><code>ollama</code></td></tr>
+    </tbody>
+  </table>
+  <div class="note tip"><b>Why this matters.</b> You can build with cheap fast Groq while testing, run Ollama on your laptop for private data, then switch to Claude for hard tasks. Same agent code throughout.</div>
+  <h3>Content blocks</h3>
+  <p>In 1.0, every model returns the same shape, no matter the provider. You read the answer through <code>response.content_blocks</code>. Each block has a <code>type</code>: <code>text</code>, <code>reasoning</code>, or <code>tool_call</code>. This means provider quirks no longer leak into your code.</p>
+</section>
+
+<!-- TOOLS -->
+<section id="tools">
+  <h2 class="sec">5. Tools — giving the agent hands</h2>
+  <p>A tool is just a function the model can call. The fastest way to make one is the <code>@tool</code> decorator. Write a normal Python function with a clear docstring. The docstring tells the model when to use it.</p>
+  <pre><code><span class="k">from</span> langchain.tools <span class="k">import</span> tool
+
+<span class="n">@tool</span>
+<span class="k">def</span> <span class="f">get_weather</span>(city: str) -> str:
+    <span class="s">"""Get the current weather for a city."""</span>
+    <span class="k">return</span> <span class="f">f</span><span class="s">"It's sunny and 70F in {city}"</span></code></pre>
+  <p>Pass tools to the agent in a list: <code>tools=[get_weather, ...]</code>. The model reads the names and docstrings and decides which to call.</p>
+  <h3>MCP — borrow tools from anywhere</h3>
+  <p>MCP (Model Context Protocol) is a shared standard for tools. Many apps now publish MCP servers. With <code>langchain-mcp-adapters</code> you can pull those tools straight into your agent.</p>
+  <ul>
+    <li><code>MultiServerMCPClient</code> connects to one or many MCP servers at once.</li>
+    <li>It turns each MCP tool into a normal LangChain tool with <code>get_tools()</code>.</li>
+    <li>You can mix MCP tools and your own <code>@tool</code> functions in the same list.</li>
+  </ul>
+  <div class="note"><b>@tool vs MCP — which?</b> Use <code>@tool</code> for your own logic. Use MCP to plug into outside services without writing wrappers. They work together.</div>
+</section>
+
+<!-- MEMORY -->
+<section id="memory">
+  <h2 class="sec">6. Memory — short-term and long-term</h2>
+  <p>Out of the box, an agent forgets everything after each call. LangGraph adds two kinds of memory.</p>
+  <div class="grid2">
+    <div class="card">
+      <h3 style="margin-top:0">Short-term (a checkpointer)</h3>
+      <p>Remembers <b>this conversation</b>. It saves the message history per <code>thread_id</code>. Reload the same thread and the chat continues. This is also what lets a long job pause and resume.</p>
+      <p><b>Options:</b> <code>InMemorySaver</code> (testing), <code>PostgresSaver</code>, <code>RedisSaver</code>, <code>MongoDBSaver</code> (production).</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Long-term (a store)</h3>
+      <p>Remembers <b>across conversations</b>. Facts about a user saved under a namespace like <code>("memories", user_id)</code>. Add an embeddings index and you can search memories by meaning.</p>
+      <p><b>Options:</b> <code>InMemoryStore</code> (testing), plus Postgres, Redis, and others for production.</p>
+    </div>
+  </div>
+  <pre><code><span class="k">from</span> langgraph.checkpoint.memory <span class="k">import</span> InMemorySaver
+<span class="k">from</span> langgraph.store.memory <span class="k">import</span> InMemoryStore
+
+checkpointer = <span class="f">InMemorySaver</span>()   <span class="c"># short-term: this chat</span>
+store = <span class="f">InMemoryStore</span>()          <span class="c"># long-term: across chats</span>
+
+graph = builder.<span class="f">compile</span>(checkpointer=checkpointer, store=store)
+
+<span class="c"># thread_id keeps each conversation separate</span>
+graph.<span class="f">invoke</span>(state, {<span class="s">"configurable"</span>: {<span class="s">"thread_id"</span>: <span class="s">"user-123"</span>}})</code></pre>
+  <div class="note tip"><b>Mental model.</b> Checkpointer = the agent's working memory for one task. Store = its notebook it keeps forever.</div>
+</section>
+
+<!-- MIDDLEWARE -->
+<section id="middleware">
+  <h2 class="sec">7. Middleware — the new control layer</h2>
+  <p>Middleware is the headline feature of LangChain 1.0. It lets you hook into the agent loop and change behavior at each step — without rewriting the agent. Think of it as plugins that wrap the model call.</p>
+  <p>LangChain ships ready-made middleware:</p>
+  <table>
+    <thead><tr><th>Middleware</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td><code>PIIMiddleware</code></td><td>Finds and redacts or blocks private data (emails, phone numbers).</td></tr>
+      <tr><td><code>SummarizationMiddleware</code></td><td>Shrinks long chat history so you stay under the context limit.</td></tr>
+      <tr><td><code>HumanInTheLoopMiddleware</code></td><td>Pauses for human approval before risky tool calls.</td></tr>
+    </tbody>
+  </table>
+  <pre><code><span class="k">from</span> langchain.agents <span class="k">import</span> create_agent
+<span class="k">from</span> langchain.agents.middleware <span class="k">import</span> PIIMiddleware, SummarizationMiddleware
+
+agent = <span class="f">create_agent</span>(
+    model=<span class="s">"claude-sonnet-4-6"</span>,
+    tools=[read_email, send_email],
+    middleware=[
+        <span class="f">PIIMiddleware</span>(<span class="s">"email"</span>, strategy=<span class="s">"redact"</span>),
+        <span class="f">SummarizationMiddleware</span>(model=<span class="s">"claude-sonnet-4-6"</span>, trigger={<span class="s">"tokens"</span>: 500}),
+    ],
+)</code></pre>
+  <p>You can also write your own by subclassing <code>AgentMiddleware</code> and hooking <code>wrap_model_call</code> — for example, pick a bigger model for expert users. Full example in the <a href="#appendix">Appendix</a>.</p>
+</section>
+
+<!-- OBSERVABILITY -->
+<section id="observability">
+  <h2 class="sec">8. Observability — see inside your agent</h2>
+  <p>Agents are loops with many hidden steps. When one goes wrong, you need to see every step. That is observability. The main tool is <b>LangSmith</b>.</p>
+  <h3>Tracing</h3>
+  <p>A trace records every model call, tool call, and decision, with timing, tokens, and cost. If you use LangChain, tracing turns on with two environment variables. No code change.</p>
+  <pre><code><span class="c"># set these and traces appear in LangSmith automatically</span>
+LANGSMITH_TRACING=<span class="s">true</span>
+LANGSMITH_API_KEY=<span class="s">your-key</span></code></pre>
+  <p>LangSmith is framework-agnostic. It has SDKs for Python, TypeScript, Go, and Java, so it can watch agents built outside LangChain too. (You can also self-host or use open tools like Langfuse if you prefer.)</p>
+  <h3>Evaluation (evals)</h3>
+  <p>Evals are tests for agents. Because output is not fixed, you score it instead of checking for an exact match.</p>
+  <ul>
+    <li><b>Offline evals</b> — run your agent over a saved dataset of examples and score the results.</li>
+    <li><b>Online evals</b> — grade real production traffic as it happens, often with an "LLM-as-judge".</li>
+    <li><b>Trajectory evals</b> — score the <i>path</i> the agent took (its tool calls and steps), not just the final answer.</li>
+  </ul>
+  <p>LangSmith plugs into <code>pytest</code>, Vitest, and GitHub Actions. You can fail a build when scores drop — the same discipline as normal unit tests.</p>
+  <h3>What changed in 2026</h3>
+  <p>LangSmith grew from a tracing tool into a full agent platform: unified cost tracking across the whole workflow (model + retrieval + tools + external APIs), annotation queues for human review, and "Fleet" for running many agents.</p>
+</section>
+
+<!-- HARNESS -->
+<section id="harness">
+  <h2 class="sec">9. Harnesses & Deep Agents</h2>
+  <p>A <b>harness</b> is everything wrapped around the model: the tools, the guardrails, the feedback loops, the context rules, and the observability. The big lesson of 2026: a great model still fails without a good harness. The focus moved from the model to the scaffolding around it.</p>
+  <p><b>Deep Agents</b> is LangChain's ready-made harness for long, complex, autonomous jobs. Install with <code>pip install deepagents</code> and build with <code>create_deep_agent</code>. It bundles four things a one-shot agent lacks:</p>
+  <ul>
+    <li><b>A planning tool</b> (<code>write_todos</code>) — the agent keeps a visible to-do list. This simple habit greatly improves focus on long tasks.</li>
+    <li><b>A virtual filesystem</b> — <code>ls</code>, <code>read_file</code>, <code>write_file</code>, <code>edit_file</code>. The agent offloads notes and work products to "files" instead of cramming everything into context.</li>
+    <li><b>Sub-agents</b> — a <code>task</code> tool spawns fresh helper agents for isolated jobs. Each gets clean context and returns one summary. This keeps the main context tidy.</li>
+    <li><b>A tuned main loop</b> — sensible prompts and context handling out of the box.</li>
+  </ul>
+  <pre><code><span class="k">from</span> deepagents <span class="k">import</span> create_deep_agent
+
+agent = <span class="f">create_deep_agent</span>(
+    model=<span class="s">"claude-sonnet-4-6"</span>,
+    tools=[internet_search],
+    system_prompt=<span class="s">"You are an expert researcher."</span>,
+)</code></pre>
+  <div class="note"><b>When to use it.</b> Use a plain <code>create_agent</code> for quick tasks. Use Deep Agents when the job is long, multi-stage, and the agent must plan and work in steps (deep research, coding, multi-doc analysis).</div>
+</section>
+
+<!-- MULTI -->
+<section id="multi">
+  <h2 class="sec">10. Multi-agent patterns</h2>
+  <p>Sometimes one agent is not enough. You split the work across specialists. Two common shapes, both built on LangGraph:</p>
+  <table>
+    <thead><tr><th>Pattern</th><th>How it works</th><th>Library</th></tr></thead>
+    <tbody>
+      <tr><td><b>Supervisor</b></td><td>One boss agent routes work to specialist agents and collects results.</td><td><code>langgraph-supervisor</code></td></tr>
+      <tr><td><b>Swarm</b></td><td>Agents hand off to each other directly as the task shifts. No central boss.</td><td><code>langgraph-swarm</code></td></tr>
+    </tbody>
+  </table>
+  <p>Deep Agents' sub-agents are a third, simpler option: one main agent spins up helpers on demand.</p>
+</section>
+
+<!-- HITL -->
+<section id="hitl">
+  <h2 class="sec">11. Human-in-the-loop</h2>
+  <p>For risky actions (sending money, deleting data, emailing customers), you want a human to approve first. LangGraph supports this with <b>interrupts</b>: the agent pauses, saves its state via the checkpointer, waits for a human, then resumes from the exact same spot.</p>
+  <p>The easy path is <code>HumanInTheLoopMiddleware</code>. You list which tools need approval and the allowed choices (<code>approve</code>, <code>edit</code>, <code>reject</code>).</p>
+  <pre><code><span class="k">from</span> langchain.agents.middleware <span class="k">import</span> HumanInTheLoopMiddleware
+
+<span class="f">HumanInTheLoopMiddleware</span>(
+    interrupt_on={<span class="s">"send_email"</span>: {<span class="s">"allowed_decisions"</span>: [<span class="s">"approve"</span>, <span class="s">"edit"</span>, <span class="s">"reject"</span>]}}
+)</code></pre>
+  <div class="note warn"><b>Needs a checkpointer.</b> Pausing and resuming only works if short-term memory is on. See <a href="#memory">Memory</a>.</div>
+</section>
+
+<!-- RAG -->
+<section id="rag">
+  <h2 class="sec">12. RAG / retrieval</h2>
+  <p>RAG (retrieval-augmented generation) feeds the model your own documents so it answers from real facts, not guesses. The flow:</p>
+  <ol>
+    <li><b>Load</b> your docs (PDFs, web pages, databases).</li>
+    <li><b>Split</b> them into chunks.</li>
+    <li><b>Embed</b> each chunk into a vector with <code>init_embeddings</code>.</li>
+    <li><b>Store</b> the vectors in a vector store (Postgres/pgvector, Chroma, etc).</li>
+    <li><b>Retrieve</b> the closest chunks at query time and pass them to the model.</li>
+  </ol>
+  <p>In agent style, you wrap retrieval as a <b>tool</b>. The agent decides when to search your docs, rather than searching on every turn. This is more flexible than a fixed RAG chain.</p>
+</section>
+
+<!-- DEPLOY -->
+<section id="deploy">
+  <h2 class="sec">13. Deployment</h2>
+  <p>A notebook agent is not a product. To ship, you need an always-on server, saved state, and streaming. Options:</p>
+  <ul>
+    <li><b>LangGraph Platform</b> — LangChain's managed service. Gives you an API endpoint, persistence, streaming, and scaling for your graph.</li>
+    <li><b>Self-host</b> — wrap your agent in FastAPI with a Postgres checkpointer. More control, more work.</li>
+    <li><b>Deep Agents Deploy</b> — a path for shipping Deep Agents specifically (announced 2026).</li>
+  </ul>
+  <p>Whatever you pick: turn on LangSmith tracing, use a real database checkpointer (not in-memory), and gate risky tools behind human approval.</p>
+</section>
+
+<!-- TOPICS MASTER LIST -->
+<section id="topics">
+  <h2 class="sec">14. Master topic list (the living roadmap)</h2>
+  <p>Everything worth covering, in one place. <span class="badge b-done">Covered</span> is written above. <span class="badge b-soon">Planned</span> is next. <span class="badge b-idea">Idea</span> is a candidate to add later. We grow this list as the field moves.</p>
+  <table>
+    <thead><tr><th>Topic</th><th>What it covers</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>The agent loop</td><td>Think → act → observe → repeat</td><td><span class="badge b-done">Covered</span></td></tr>
+      <tr><td>LangChain / LangGraph / Deep Agents / LangSmith</td><td>Who does what</td><td><span class="badge b-done">Covered</span></td></tr>
+      <tr><td><code>create_agent</code></td><td>The 1.0 way to build agents</td><td><span class="badge b-done">Covered</span></td></tr>
+      <tr><td>Models</td><td>Claude, OpenAI, Groq, Ollama via <code>init_chat_model</code></td><td><span class="badge b-done">Covered</span></td></tr>
+      <tr><td>Content blocks</td><td>One output shape for all providers</td><td><span class="badge b-done">Covered</span></td></tr>
+      <tr><td>Tools</td><td><code>@tool</code> functions</td><td><span class="badge b-done">Covered</span></td></tr>
+      <tr><td>MCP tools</td><td><code>langchain-mcp-adapters</code>, multi-server client</td><td><span class="badge b-done">Covered</span></td></tr>
+      <tr><td>Short-term memory</td><td>Checkpointers, threads, resume</td><td><span class="badge b-done">Covered</span></td></tr>
+      <tr><td>Long-term memory</td><td>Stores, namespaces, semantic search</td><td><span class="badge b-done">Covered</span></td></tr>
+      <tr><td>Middleware</td><td>PII, summarization, custom hooks</td><td><span class="badge b-done">Covered</span></td></tr>
+      <tr><td>Structured output</td><td><code>ToolStrategy</code>, <code>ProviderStrategy</code>, Pydantic</td><td><span class="badge b-done">Covered</span></td></tr>
+      <tr><td>Observability</td><td>LangSmith traces</td><td><span class="badge b-done">Covered</span></td></tr>
+      <tr><td>Evals</td><td>Offline, online, trajectory, CI gates</td><td><span class="badge b-done">Covered</span></td></tr>
+      <tr><td>Harnesses</td><td>Why scaffolding beats raw model power</td><td><span class="badge b-done">Covered</span></td></tr>
+      <tr><td>Deep Agents</td><td>Planning, virtual FS, sub-agents</td><td><span class="badge b-done">Covered</span></td></tr>
+      <tr><td>Multi-agent</td><td>Supervisor, swarm</td><td><span class="badge b-done">Covered</span></td></tr>
+      <tr><td>Human-in-the-loop</td><td>Interrupts and approvals</td><td><span class="badge b-done">Covered</span></td></tr>
+      <tr><td>RAG / retrieval</td><td>Embeddings, vector stores, retriever-as-tool</td><td><span class="badge b-done">Covered</span></td></tr>
+      <tr><td>Deployment</td><td>LangGraph Platform, self-host</td><td><span class="badge b-done">Covered</span></td></tr>
+      <tr><td>Streaming</td><td>Token and step streaming to a UI</td><td><span class="badge b-soon">Planned</span></td></tr>
+      <tr><td>Context engineering</td><td>What goes in / stays / leaves the context window</td><td><span class="badge b-soon">Planned</span></td></tr>
+      <tr><td>Skills (SKILL.md)</td><td>Packaged know-how for Deep Agents</td><td><span class="badge b-soon">Planned</span></td></tr>
+      <tr><td>Sandboxes & code execution</td><td>Safe REPL / shell for agents</td><td><span class="badge b-soon">Planned</span></td></tr>
+      <tr><td>Subgraphs</td><td>Composing graphs inside graphs</td><td><span class="badge b-soon">Planned</span></td></tr>
+      <tr><td>Cost & rate-limit control</td><td>Budgets, caching, fallbacks</td><td><span class="badge b-soon">Planned</span></td></tr>
+      <tr><td>Guardrails & safety</td><td>Input/output filters, prompt-injection defense</td><td><span class="badge b-idea">Idea</span></td></tr>
+      <tr><td>Testing fixtures</td><td>Mock models and tools for fast tests</td><td><span class="badge b-idea">Idea</span></td></tr>
+      <tr><td>Caching</td><td>Prompt and embedding caches</td><td><span class="badge b-idea">Idea</span></td></tr>
+      <tr><td>Auth & multi-tenant</td><td>Per-user keys, isolation, quotas</td><td><span class="badge b-idea">Idea</span></td></tr>
+      <tr><td>Voice / multimodal agents</td><td>Audio and image in the loop</td><td><span class="badge b-idea">Idea</span></td></tr>
+      <tr><td>LangGraph Studio</td><td>Visual debugging of graphs</td><td><span class="badge b-idea">Idea</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- APPENDIX -->
+<section id="appendix">
+  <h2 class="sec">15. Code appendix — runnable snippets</h2>
+  <p class="lead">Copy-paste examples. Set your API keys as environment variables first (e.g. <code>ANTHROPIC_API_KEY</code>).</p>
+
+  <details open>
+    <summary>A. Full first agent</summary>
+<pre><code><span class="c"># pip install -U langchain langchain-anthropic</span>
+<span class="k">from</span> langchain.agents <span class="k">import</span> create_agent
+<span class="k">from</span> langchain.tools <span class="k">import</span> tool
+
+<span class="n">@tool</span>
+<span class="k">def</span> <span class="f">get_weather</span>(city: str) -> str:
+    <span class="s">"""Get the current weather for a city."""</span>
+    <span class="k">return</span> <span class="f">f</span><span class="s">"It's sunny and 70F in {city}."</span>
+
+agent = <span class="f">create_agent</span>(
+    model=<span class="s">"claude-sonnet-4-6"</span>,
+    tools=[get_weather],
+    system_prompt=<span class="s">"You are a concise assistant."</span>,
+)
+
+result = agent.<span class="f">invoke</span>({<span class="s">"messages"</span>: [
+    {<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: <span class="s">"What's the weather in Paris?"</span>}
+]})
+<span class="f">print</span>(result[<span class="s">"messages"</span>][-1].content)</code></pre>
+  </details>
+
+  <details>
+    <summary>B. Swap models — Claude, OpenAI, Groq, Ollama</summary>
+<pre><code><span class="k">from</span> langchain.chat_models <span class="k">import</span> init_chat_model
+
+<span class="c"># pip install langchain-anthropic</span>
+claude = <span class="f">init_chat_model</span>(<span class="s">"claude-sonnet-4-6"</span>, model_provider=<span class="s">"anthropic"</span>)
+
+<span class="c"># pip install langchain-openai</span>
+gpt = <span class="f">init_chat_model</span>(<span class="s">"gpt-5.4-mini"</span>, model_provider=<span class="s">"openai"</span>)
+
+<span class="c"># pip install langchain-groq  (very fast)</span>
+groq = <span class="f">init_chat_model</span>(<span class="s">"llama-3.3-70b-versatile"</span>, model_provider=<span class="s">"groq"</span>)
+
+<span class="c"># pip install langchain-ollama  (local; run `ollama pull llama3.1` first)</span>
+local = <span class="f">init_chat_model</span>(<span class="s">"llama3.1"</span>, model_provider=<span class="s">"ollama"</span>)
+
+<span class="k">for</span> m <span class="k">in</span> (claude, gpt, groq, local):
+    <span class="f">print</span>(m.<span class="f">invoke</span>(<span class="s">"Say hi in 3 words."</span>).content)</code></pre>
+  </details>
+
+  <details>
+    <summary>C. Memory — short-term and long-term</summary>
+<pre><code><span class="c"># pip install -U langchain langgraph</span>
+<span class="k">from</span> langchain.agents <span class="k">import</span> create_agent
+<span class="k">from</span> langgraph.checkpoint.memory <span class="k">import</span> InMemorySaver
+
+agent = <span class="f">create_agent</span>(
+    model=<span class="s">"claude-sonnet-4-6"</span>,
+    tools=[],
+    checkpointer=<span class="f">InMemorySaver</span>(),     <span class="c"># short-term memory</span>
+)
+
+cfg = {<span class="s">"configurable"</span>: {<span class="s">"thread_id"</span>: <span class="s">"chat-1"</span>}}
+agent.<span class="f">invoke</span>({<span class="s">"messages"</span>: [{<span class="s">"role"</span>:<span class="s">"user"</span>,<span class="s">"content"</span>:<span class="s">"My name is Nitish."</span>}]}, cfg)
+out = agent.<span class="f">invoke</span>({<span class="s">"messages"</span>: [{<span class="s">"role"</span>:<span class="s">"user"</span>,<span class="s">"content"</span>:<span class="s">"What's my name?"</span>}]}, cfg)
+<span class="f">print</span>(out[<span class="s">"messages"</span>][-1].content)   <span class="c"># -> Nitish</span>
+
+<span class="c"># For production, swap InMemorySaver for PostgresSaver / RedisSaver.</span></code></pre>
+  </details>
+
+  <details>
+    <summary>D. Custom middleware — pick model by user level</summary>
+<pre><code><span class="k">from</span> dataclasses <span class="k">import</span> dataclass
+<span class="k">from</span> typing <span class="k">import</span> Callable
+<span class="k">from</span> langchain_openai <span class="k">import</span> ChatOpenAI
+<span class="k">from</span> langchain.agents <span class="k">import</span> create_agent
+<span class="k">from</span> langchain.agents.middleware <span class="k">import</span> AgentMiddleware, ModelRequest
+<span class="k">from</span> langchain.agents.middleware.types <span class="k">import</span> ModelResponse
+
+<span class="n">@dataclass</span>
+<span class="k">class</span> <span class="f">Context</span>:
+    user_expertise: str = <span class="s">"beginner"</span>
+
+<span class="k">class</span> <span class="f">ExpertiseMiddleware</span>(AgentMiddleware):
+    <span class="k">def</span> <span class="f">wrap_model_call</span>(self, request: ModelRequest,
+                        handler: Callable[[ModelRequest], ModelResponse]) -> ModelResponse:
+        <span class="k">if</span> request.runtime.context.user_expertise == <span class="s">"expert"</span>:
+            model = <span class="f">ChatOpenAI</span>(model=<span class="s">"gpt-5.4"</span>)
+        <span class="k">else</span>:
+            model = <span class="f">ChatOpenAI</span>(model=<span class="s">"gpt-5-nano"</span>)
+        <span class="k">return</span> <span class="f">handler</span>(request.<span class="f">override</span>(model=model))
+
+agent = <span class="f">create_agent</span>(
+    model=<span class="s">"claude-sonnet-4-6"</span>,
+    tools=[],
+    middleware=[<span class="f">ExpertiseMiddleware</span>()],
+    context_schema=Context,
+)</code></pre>
+  </details>
+
+  <details>
+    <summary>E. Structured output (typed answers)</summary>
+<pre><code><span class="k">from</span> langchain.agents <span class="k">import</span> create_agent
+<span class="k">from</span> langchain.agents.structured_output <span class="k">import</span> ToolStrategy
+<span class="k">from</span> pydantic <span class="k">import</span> BaseModel
+
+<span class="k">class</span> <span class="f">Weather</span>(BaseModel):
+    temperature: float
+    condition: str
+
+<span class="n">@tool</span>
+<span class="k">def</span> <span class="f">weather_tool</span>(city: str) -> str:
+    <span class="s">"""Get the weather for a city."""</span>
+    <span class="k">return</span> <span class="f">f</span><span class="s">"sunny and 70 degrees in {city}"</span>
+
+agent = <span class="f">create_agent</span>(
+    <span class="s">"claude-sonnet-4-6"</span>,
+    tools=[weather_tool],
+    response_format=<span class="f">ToolStrategy</span>(Weather),
+)
+res = agent.<span class="f">invoke</span>({<span class="s">"messages"</span>: [{<span class="s">"role"</span>:<span class="s">"user"</span>,<span class="s">"content"</span>:<span class="s">"Weather in SF?"</span>}]})
+<span class="f">print</span>(res[<span class="s">"structured_response"</span>])   <span class="c"># Weather(temperature=70.0, condition='sunny')</span></code></pre>
+  </details>
+
+  <details>
+    <summary>F. MCP tools via MultiServerMCPClient</summary>
+<pre><code><span class="c"># pip install langchain-mcp-adapters</span>
+<span class="k">import</span> asyncio
+<span class="k">from</span> langchain_mcp_adapters.client <span class="k">import</span> MultiServerMCPClient
+<span class="k">from</span> langchain.agents <span class="k">import</span> create_agent
+
+<span class="k">async def</span> <span class="f">main</span>():
+    client = <span class="f">MultiServerMCPClient</span>({
+        <span class="s">"math"</span>: {<span class="s">"command"</span>: <span class="s">"python"</span>, <span class="s">"args"</span>: [<span class="s">"math_server.py"</span>], <span class="s">"transport"</span>: <span class="s">"stdio"</span>},
+        <span class="s">"docs"</span>: {<span class="s">"url"</span>: <span class="s">"http://localhost:8000/mcp"</span>, <span class="s">"transport"</span>: <span class="s">"streamable_http"</span>},
+    })
+    tools = <span class="k">await</span> client.<span class="f">get_tools</span>()
+    agent = <span class="f">create_agent</span>(model=<span class="s">"claude-sonnet-4-6"</span>, tools=tools)
+    out = <span class="k">await</span> agent.<span class="f">ainvoke</span>({<span class="s">"messages"</span>: [{<span class="s">"role"</span>:<span class="s">"user"</span>,<span class="s">"content"</span>:<span class="s">"What is 12 * 9?"</span>}]})
+    <span class="f">print</span>(out[<span class="s">"messages"</span>][-1].content)
+
+asyncio.<span class="f">run</span>(<span class="f">main</span>())</code></pre>
+  </details>
+
+  <details>
+    <summary>G. Deep Agent (the harness)</summary>
+<pre><code><span class="c"># pip install deepagents</span>
+<span class="k">from</span> deepagents <span class="k">import</span> create_deep_agent
+
+<span class="k">def</span> <span class="f">internet_search</span>(query: str) -> str:
+    <span class="s">"""Search the web for a query."""</span>
+    <span class="k">return</span> <span class="s">"...results..."</span>
+
+agent = <span class="f">create_deep_agent</span>(
+    model=<span class="s">"claude-sonnet-4-6"</span>,
+    tools=[internet_search],
+    system_prompt=<span class="s">"You are an expert researcher. Plan, then work in steps."</span>,
+)
+
+<span class="c"># It comes with write_todos, a virtual filesystem, and sub-agents built in.</span>
+result = agent.<span class="f">invoke</span>({<span class="s">"messages"</span>: [
+    {<span class="s">"role"</span>:<span class="s">"user"</span>,<span class="s">"content"</span>:<span class="s">"Write a short report on AI agent harnesses."</span>}
+]})
+<span class="f">print</span>(result[<span class="s">"messages"</span>][-1].content)</code></pre>
+  </details>
+
+  <details>
+    <summary>H. Turn on LangSmith tracing</summary>
+<pre><code><span class="c"># pip install -U langsmith</span>
+<span class="c"># Set these in your shell or .env — no code change needed:</span>
+<span class="c">#   export LANGSMITH_TRACING=true</span>
+<span class="c">#   export LANGSMITH_API_KEY=ls-...</span>
+
+<span class="k">from</span> langchain.agents <span class="k">import</span> create_agent
+
+agent = <span class="f">create_agent</span>(model=<span class="s">"claude-sonnet-4-6"</span>, tools=[])
+agent.<span class="f">invoke</span>({<span class="s">"messages"</span>: [{<span class="s">"role"</span>:<span class="s">"user"</span>,<span class="s">"content"</span>:<span class="s">"hello"</span>}]})
+<span class="c"># Open smith.langchain.com to see the full trace, tokens, and cost.</span></code></pre>
+  </details>
+</section>
+
+<!-- SOURCES -->
+<section id="sources">
+  <h2 class="sec">16. Sources</h2>
+  <p class="lead">Official docs first, then background reading. Check the official docs for the newest API details.</p>
+  <ul class="src">
+    <li><a href="https://docs.langchain.com/oss/python/langchain/agents">LangChain — Agents & create_agent (docs)</a></li>
+    <li><a href="https://reference.langchain.com/python/langchain/agents/factory/create_agent">create_agent — API reference</a></li>
+    <li><a href="https://blog.langchain.com/langchain-langgraph-1dot0/">LangChain & LangGraph reach v1.0 (blog)</a></li>
+    <li><a href="https://docs.langchain.com/oss/python/integrations/chat">Chat model integrations (Claude / OpenAI / Groq / Ollama)</a></li>
+    <li><a href="https://docs.langchain.com/oss/python/langgraph/persistence">LangGraph — persistence, checkpointers & stores</a></li>
+    <li><a href="https://docs.langchain.com/oss/python/langgraph/add-memory">LangGraph — adding memory</a></li>
+    <li><a href="https://docs.langchain.com/oss/python/langchain/mcp">LangChain — Model Context Protocol (MCP)</a></li>
+    <li><a href="https://github.com/langchain-ai/langchain-mcp-adapters">langchain-mcp-adapters (GitHub)</a></li>
+    <li><a href="https://docs.langchain.com/oss/python/deepagents/overview">Deep Agents — overview (docs)</a></li>
+    <li><a href="https://github.com/langchain-ai/deepagents">deepagents — "the batteries-included agent harness" (GitHub)</a></li>
+    <li><a href="https://www.langchain.com/blog/the-anatomy-of-an-agent-harness">The Anatomy of an Agent Harness (blog)</a></li>
+    <li><a href="https://docs.langchain.com/langsmith/observability">LangSmith — Observability (docs)</a></li>
+    <li><a href="https://www.langchain.com/langsmith/evaluation">LangSmith — Evaluation</a></li>
+    <li><a href="https://github.com/langchain-ai/langgraph-supervisor-py">langgraph-supervisor (GitHub)</a></li>
+    <li><a href="https://github.com/langchain-ai/langgraph-swarm-py">langgraph-swarm (GitHub)</a></li>
+  </ul>
+  <footer>
+    Living document. Model names and APIs change fast — when in doubt, trust the official LangChain docs over any guide.
+    Built for Nitish's "AI Agents" project. Update the version and date at the top when you revise.
+  </footer>
+</section>
+
+</main>
+</div>
+</body>
+</html>
