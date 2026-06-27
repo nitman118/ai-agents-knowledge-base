@@ -1,0 +1,114 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Multimodal agents — text + image</title>
+<style>
+:root{--bg:#0f1115;--panel:#161922;--panel2:#1d212c;--ink:#e6e9ef;--muted:#9aa3b2;
+--line:#2a2f3a;--accent:#5b8cff;--accent2:#2fd6a5;--warn:#f0b24b;--pink:#ff7aa2;--code:#11141b;--chip:#222838;--radius:14px;}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+code,pre{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace}
+main{max-width:880px;margin:0 auto;padding:40px 28px 90px}
+.back{display:inline-block;color:var(--muted);font-size:14px;margin-bottom:18px}
+.back:hover{color:var(--accent)}
+h1{font-size:30px;line-height:1.25;margin:0 0 6px}
+h2{font-size:20px;margin:30px 0 6px;padding-top:14px;border-top:1px solid var(--line)}
+h3{font-size:16px;margin:18px 0 4px;color:#fff}
+.sub{color:var(--muted);font-size:16px;margin:0 0 18px}
+p{margin:10px 0}ul,ol{margin:10px 0;padding-left:22px}li{margin:5px 0}
+.meta{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 24px}
+.pill{background:var(--chip);border:1px solid var(--line);color:var(--muted);padding:4px 11px;border-radius:999px;font-size:12.5px}
+.pill b{color:var(--ink);font-weight:600}
+.note{border-left:3px solid var(--accent);background:var(--panel2);padding:12px 16px;border-radius:8px;margin:14px 0}
+.note.tip{border-color:var(--accent2)}.note.warn{border-color:var(--warn)}.note b{color:#fff}
+pre{background:var(--code);border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow-x:auto;font-size:13.5px;line-height:1.55}
+pre code{color:#cdd6e4}
+p code,li code,td code{background:var(--chip);padding:1px 6px;border-radius:5px;font-size:13px;color:#ffd9a8}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14.5px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.04em}
+.k{color:#c792ea}.s{color:#ecc48d}.c{color:#637777;font-style:italic}.f{color:#82aaff}.n{color:#f78c6c}
+footer{color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:18px;margin-top:36px}
+/* hub */
+.hero{margin-bottom:8px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0}
+@media(max-width:760px){.grid{grid-template-columns:1fr}}
+.card{display:block;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;color:var(--ink)}
+.card:hover{border-color:var(--accent);text-decoration:none;transform:translateY(-2px);transition:.15s}
+.card .num{font-size:12px;color:var(--muted);letter-spacing:.05em}
+.card h3{margin:4px 0 4px;font-size:16px;color:#fff}
+.card p{margin:0;font-size:13px;color:var(--muted)}
+.row{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}
+.btn{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px 16px;color:var(--ink);font-size:14px}
+.btn:hover{border-color:var(--accent);text-decoration:none}
+.badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px}
+.b-done{background:rgba(47,214,165,.15);color:var(--accent2)}
+.b-soon{background:rgba(240,178,75,.15);color:var(--warn)}
+</style></head><body><main>
+<a class="back" href="../index.html">&larr; Back to hub</a>
+<h1>Multimodal agents — text + image</h1>
+<div class="meta"><span class="pill">Status <b>Covered</b></span><span class="pill">Updated <b>28 Jun 2026</b></span></div>
+
+<h2>In one line</h2>
+<p>Give the model eyes. Send images with your text and it can read, describe, compare, or reason over them.</p>
+
+<h2>Key idea</h2>
+<p>In 1.0 you send mixed input as a list of <b>content blocks</b> inside one message.
+A text block plus an image block. The image can come three ways:</p>
+<ul>
+<li><b>URL</b> — point to an image on the web. Easiest and lightest.</li>
+<li><b>base64</b> — paste the raw image data. Needs a <code>mime_type</code> like <code>image/png</code>.</li>
+<li><b>file_id</b> — an id for a file you already uploaded to the provider.</li>
+</ul>
+<div class="note tip"><b>Prefer URLs.</b> base64 makes the message big and slow. Use it only when the file is not reachable by a link.</div>
+
+<h2>Send an image (URL)</h2>
+<pre><code><span class="k">from</span> langchain.agents <span class="k">import</span> create_agent
+agent = <span class="f">create_agent</span>(model=<span class="s">"claude-sonnet-4-6"</span>, tools=[])
+
+message = {
+    <span class="s">"role"</span>: <span class="s">"user"</span>,
+    <span class="s">"content"</span>: [
+        {<span class="s">"type"</span>: <span class="s">"text"</span>, <span class="s">"text"</span>: <span class="s">"What is in this image?"</span>},
+        {<span class="s">"type"</span>: <span class="s">"image"</span>, <span class="s">"url"</span>: <span class="s">"https://example.com/photo.jpg"</span>},
+    ],
+}
+result = agent.<span class="f">invoke</span>({<span class="s">"messages"</span>: [message]})
+<span class="f">print</span>(result[<span class="s">"messages"</span>][-1].content)</code></pre>
+
+<h2>Send an image (base64)</h2>
+<pre><code>{<span class="s">"type"</span>: <span class="s">"image"</span>, <span class="s">"base64"</span>: <span class="s">"AAAA...."</span>, <span class="s">"mime_type"</span>: <span class="s">"image/png"</span>}</code></pre>
+
+<h2>Reading the reply</h2>
+<p>The model also answers in content blocks. An image-making model returns an <code>image</code> block.
+Read them the same way for every provider:</p>
+<pre><code><span class="k">for</span> block <span class="k">in</span> response.content_blocks:
+    <span class="k">if</span> block[<span class="s">"type"</span>] == <span class="s">"text"</span>:
+        <span class="f">print</span>(block[<span class="s">"text"</span>])
+    <span class="k">elif</span> block[<span class="s">"type"</span>] == <span class="s">"image"</span>:
+        <span class="f">print</span>(block.<span class="f">get</span>(<span class="s">"url"</span>) <span class="k">or</span> block.<span class="f">get</span>(<span class="s">"base64"</span>))</code></pre>
+
+<h2>Good use cases</h2>
+<ul>
+<li>Read text from a photo or screenshot (OCR).</li>
+<li>Describe a chart or diagram.</li>
+<li>Compare two product images.</li>
+<li>Check a receipt or form.</li>
+</ul>
+
+<h2>Watch out</h2>
+<ul>
+<li>Not every model takes images. Claude, GPT, and Gemini do. Check the model first.</li>
+<li>Same pattern works for <code>audio</code> and <code>video</code> blocks (model permitting).</li>
+<li>Tools can return images too. MCP tools give back image content blocks the agent can use.</li>
+</ul>
+
+<h2>Links</h2>
+<ul>
+<li><a href="https://docs.langchain.com/oss/python/langchain/messages">Messages &amp; multimodal input (docs)</a></li>
+<li><a href="https://docs.langchain.com/oss/python/langchain/models">Models — multimodal output (docs)</a></li>
+<li><a href="../02-models/index.html">Models (content blocks)</a></li>
+</ul>
+
+<h2>My notes</h2><div class="note"><p>Add your own findings here as you learn.</p></div>
+<footer>Part of the AI Agents knowledge base. <a href="../index.html">Hub</a> &middot; <a href="../guides/langchain-agents-guide.html">Full guide</a></footer>
+</main></body></html>
